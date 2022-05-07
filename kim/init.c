@@ -139,7 +139,7 @@ static const void *attr_sect("isrv_irq") _isrv_irq[] = {
 	isr_none, /* SPI2 */
 	isr_none, /* USART1 */
 	isr_none, /* USART2 */
-	0,		  /* Reserved */
+	isr_none, /* USART3 */
 	isr_none, /* EXTI15_10 */
 	isr_none, /* EXTI17 / RTC_Alarm */
 	isr_none, /* EXTI18 / OTG_FS WKUP */
@@ -208,13 +208,13 @@ u32 k_ticks_freq(void) attr_alias("systicks_freq");
 
 void init_clock(void)
 {
-	/* Enable HSE (8MHz external oscillator) */
-	or32(RCC_CR, BIT16);
-	while (!(rd32(RCC_CR) & BIT17));
+	/* Enable HSI (16MHz oscillator) */
+	or32(RCC_CR, BIT0);
+	while (!(rd32(RCC_CR) & BIT1));
 
-	/* PLLM=8 PLLN=336, PLLP=00 (2), PLLQ=7; f_PLL=168MHz, f_USB=48MHz */
-	and32(RCC_PLLCFGR, ~0x0f037fff);
-	or32(RCC_PLLCFGR, BIT22 | (7 << 24) | (336 << 6) | 8);
+	/* PLLM=8 PLLN=168, PLLP=00 (2), PLLQ=7; f_PLL=168MHz, f_USB=48MHz */
+	and32(RCC_PLLCFGR, 0xf0bc8000);
+	or32(RCC_PLLCFGR, (7 << 24) | (168 << 6) | 8);
 	or32(RCC_CR, BIT24);
 	while (!(rd32(RCC_CR) & BIT25));
 
@@ -227,7 +227,7 @@ void init_clock(void)
 
 	/* Enable clock on AHB and APB peripherals */
 	wr32(RCC_AHB1ENR, BIT7 | BIT4 | BIT3 | BIT2 | BIT1 | BIT0); /* GPIO */
-	wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT17); /* TIM3, TIM4 and USART2 */
+	wr32(RCC_APB1ENR, BIT1 | BIT2 | BIT18); /* TIM3, TIM4 and USART3 */
 	wr32(RCC_APB2ENR, BIT0 | BIT4 | BIT8 | BIT18); /* TIM1/11, ADC1, USART1 */
 }
 
@@ -243,22 +243,22 @@ int putchar(int c)
 {
 	if (c == '\n')
 		putchar('\r');
-	wr32(R_USART2_DR, c);
-	while (!(rd32(R_USART2_SR) & BIT6));
+	wr32(R_USART3_DR, c);
+	while (!(rd32(R_USART3_SR) & BIT6));
 	return c;
 }
 
 void init_uart(void)
 {
-	/* USART2 on PD5/PD6 */
-	gpio_func(IO(PORTD, 5), 7);
-	gpio_func(IO(PORTD, 6), 7);
-	gpio_mode(IO(PORTD, 5), PULL_NO);
-	gpio_mode(IO(PORTD, 6), PULL_NO);
+	/* USART3 on PB10/PB11 */
+	gpio_func(IO(PORTB, 10), 7);
+	gpio_func(IO(PORTB, 11), 7);
+	gpio_mode(IO(PORTB, 10), PULL_NO);
+	gpio_mode(IO(PORTB, 11), PULL_NO);
 	/* fPCLK=42MHz, br=115.2KBps, USARTDIV=22.8125, see table 80 pag. 519 */
-	wr32(R_USART2_BRR, (22 << 4) | 13);
-	or32(R_USART2_CR1, BIT13 | BIT5 | BIT3 | BIT2);
-	or32(R_NVIC_ISER(1), BIT6); /* USART2 is irq 38 */
+	wr32(R_USART3_BRR, 0x16c);
+	or32(R_USART3_CR1, BIT13 | BIT5 | BIT3 | BIT2);
+	or32(R_NVIC_ISER(1), BIT7); /* USART3 is irq 39 */
 }
 
 void init(void)

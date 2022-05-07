@@ -47,6 +47,13 @@
 #define R_USART2_CR2    reg32(0x40004410)
 #define R_USART2_CR3    reg32(0x40004414)
 
+#define R_USART3_SR     reg32(0x40004800)
+#define R_USART3_DR     reg32(0x40004804)
+#define R_USART3_BRR    reg32(0x40004808)
+#define R_USART3_CR1    reg32(0x4000480c)
+#define R_USART3_CR2    reg32(0x40004810)
+#define R_USART3_CR3    reg32(0x40004814)
+
 #define R_USART6_SR     reg32(0x40011400)
 #define R_USART6_DR     reg32(0x40011404)
 #define R_USART6_BRR    reg32(0x40011408)
